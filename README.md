@@ -13,6 +13,7 @@ Then run ./configure --prefix=$HOME --with-plugins --with-tcl. Explaining --pref
 
 6. Installation Command: Execute make install (or gmake install on BSD). Location: This will install the BitchX binary to /usr/local/bin or to $HOME/bin if you used the make install_local option.
 
-<img width="1879" height="1000" alt="image" src="https://github.com/user-attachments/assets/b762669b-cde1-4380-8fce-f56b7c1d2e8a" />
+<img width="1879" height="1000" alt="image" src="https://github.com/user-attachments/assets/1e2c3fcd-f197-426f-8d5f-6e4d11bb45c5" />
+
 
 
