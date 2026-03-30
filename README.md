@@ -12,3 +12,5 @@ Then run ./configure --prefix=$HOME --with-plugins --with-tcl. Explaining --pref
 5. Compilation Command: Execute make inside the BitchX directory (on BSD platforms, use gmake). Warnings: You will see many Warning messages; these are normal and can be ignored. Only stop if you encounter a hard Error.
 
 6. Installation Command: Execute make install (or gmake install on BSD). Location: This will install the BitchX binary to /usr/local/bin or to $HOME/bin if you used the make install_local option.
+
+<img width="1359" height="917" alt="image" src="https://github.com/user-attachments/assets/07151d29-bc51-48aa-b067-0681ecbff738" />
