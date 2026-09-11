@@ -458,6 +458,8 @@ ChannelList *chan = NULL;
 				char *ban, *u, *h;
 				u = LOCAL_COPY(Nick->host);
 				h = strchr(u, '@');
+				if (!h)
+					return;
 				*h++ = 0;
 				ban = ban_it(Nick->nick, u, h, Nick->ip);
 				if (!ban_is_on_channel(ban, chan) && !eban_is_on_channel(ban, chan))

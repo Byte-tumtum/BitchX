@@ -395,7 +395,8 @@ void userhost_ban(UserhostItem *stuff, char *nick1, char *args)
 			nick = whowas->nicklist->nick;
 			user = m_strdup(clear_server_flags(whowas->nicklist->host));
 			host = strchr(user, '@');
-			*host++ = 0;
+			if (host)
+				*host++ = 0;
 			bitchsay("Using WhoWas info for ban of %s ", nick1);
 			n = whowas->nicklist;
 		}
@@ -853,6 +854,12 @@ BUILT_IN_COMMAND(massban)
 			char *temp = LOCAL_COPY(nicks->host), *q = clear_server_flags(temp), *p = strchr(temp, '@');
 			ShitList *new;
 
+			if (!p)
+			{
+				new_free(&temp);
+				new_free(&buffer);
+				continue;
+			}
 			*p++ = 0;
 			new = (ShitList *)new_malloc(sizeof(ShitList));
 			malloc_sprintf(&new->filter, "*!*%s@%s ", q, cluster(p));
@@ -1065,6 +1072,8 @@ BUILT_IN_COMMAND(kickban)
 			p = LOCAL_COPY(nicks->host);
 			user = clear_server_flags(p);
 			host = strchr(user, '@');
+			if (!host)
+				continue;
 			*host++ = 0;
 			if (kick_first)
 				my_send_to_server(server, "KICK %s %s :%s\r\nMODE %s +b %s", 
@@ -1125,6 +1134,8 @@ BUILT_IN_COMMAND(ban)
 		{
 			char *t = LOCAL_COPY(nicks->host), *user = clear_server_flags(t), *host = strchr(user, '@');
 
+			if (!host)
+				continue;
 			*host++ = 0;
 			my_send_to_server(server, "MODE %s -o+b %s %s", chan->channel, nicks->nick, ban_it(nicks->nick, user, host, nicks->ip));
 			found++;

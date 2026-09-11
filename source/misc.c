@@ -712,7 +712,10 @@ int t = 0;
 				char *t1, *host, *banstr;
 				t1 = LOCAL_COPY(nick->host);
 				host = strchr(t1, '@');
-				*host++ = 0;
+				if (!host)
+					host = t1;
+				else
+					*host++ = 0;
 				banstr = ban_it(nick->nick, t1, host, nick->ip);
 				send_to_server("MODE %s -o+b %s %s", chan->channel, nick->nick, banstr); 
 				send_to_server("KICK %s %s :\002Join flood\002 (%d joins in %dsecs of %dsecs)", chan->channel, nick->nick, get_cset_int_var(chan->csets, KICK_ON_JOINFLOOD_CSET), t, get_cset_int_var(chan->csets, JOINFLOOD_TIME_CSET));
@@ -3690,7 +3693,10 @@ void userhost_ignore (UserhostItem *uhi, char *nick1, char *args)
 		nick = whowas->nicklist->nick;
 		user = userhost_buf = m_strdup(whowas->nicklist->host);
 		host = strchr(user, '@');
-		*host++ = 0;
+		if (host)
+			*host++ = 0;
+		else
+			host = user;
 		bitchsay("Using WhoWas info for (un)ignore of %s", nick1);
 	}
 	else

@@ -547,7 +547,7 @@ int		add = 0,
 		mod = -1;
 char		*tmp = NULL, 
 		*rest = NULL, 
-		nmodes[16], 
+		nmodes[64], 
 		nargs[100];
 UserChanModes	*ucm = NULL, 
 		*tucm = NULL;
@@ -732,7 +732,7 @@ NickList	*tnl = NULL;
 
    /* modes which can be done multiple times are added here */
 
-	for (tucm = ucm; tucm && (strlen(nmodes) + 2) < sizeof nmodes; 
+	for (tucm = ucm; tucm && (strlen(nmodes) + 8) < sizeof nmodes; 
 		tucm = tucm->next) 
 	{
 		if (tucm->o_ed) 

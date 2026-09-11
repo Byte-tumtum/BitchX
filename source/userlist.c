@@ -1286,10 +1286,13 @@ int check_prot(char *from, char *person, ChannelList *chan, BanList *thisban, Ni
 					char *h, *u;
 					u = LOCAL_COPY(kicker->host);
 					h = strchr(u, '@');
-					*h++ = 0;
-					send_to_server("MODE %s -o+b %s %s", chan->channel, kicker->nick, ban_it(kicker->nick, u, h, kicker->ip));
-					if (get_int_var(AUTO_UNBAN_VAR))
-						add_timer(0, empty_string, get_int_var(AUTO_UNBAN_VAR) * 1000, 1, timer_unban, m_sprintf("%d %s %s", from_server, chan->channel, ban_it(kicker->nick, u, h, kicker->ip)), NULL, -1, "auto-unban");
+					if (h)
+					{
+						*h++ = 0;
+						send_to_server("MODE %s -o+b %s %s", chan->channel, kicker->nick, ban_it(kicker->nick, u, h, kicker->ip));
+						if (get_int_var(AUTO_UNBAN_VAR))
+							add_timer(0, empty_string, get_int_var(AUTO_UNBAN_VAR) * 1000, 1, timer_unban, m_sprintf("%d %s %s", from_server, chan->channel, ban_it(kicker->nick, u, h, kicker->ip)), NULL, -1, "auto-unban");
+					}
 				}
 			}
 			if (user->flags & PROT_KICK)

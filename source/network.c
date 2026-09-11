@@ -284,12 +284,13 @@ int red;
 		case 3:
 		{
 			char buffer[256];
+			unsigned char len;
 			read(s, tmpbuf, 1);
-			tmpbuf[1] = '\0';
-			tmpI = atoi(tmpbuf);
-			read(s, tmpbuf, tmpI);
-			tmpbuf[tmpI] = '\0';
-			strncpy(buffer, tmpbuf, sizeof(buffer));
+			len = (unsigned char)tmpbuf[0];
+			if (len >= sizeof(buffer))
+				len = sizeof(buffer) - 1;
+			read(s, buffer, len);
+			buffer[len] = '\0';
 			read(s, tmpbuf, 2);
 			tmpbuf[3] = '\0';
 			tmpI = atoi(tmpbuf);

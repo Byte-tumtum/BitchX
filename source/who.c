@@ -949,6 +949,12 @@ void	userhost_returned (char *from, char **ArgList)
 			item.nick = next_arg(*ArgList, ArgList);
 			item.user = strchr(item.nick, '=');
 
+			if (!item.user)
+			{
+				ArgList = NULL;
+				break;
+			}
+
 			if (item.user[-1] == '*')
 			{
 				item.user[-1] = 0;
@@ -966,6 +972,11 @@ void	userhost_returned (char *from, char **ArgList)
 			item.user++;
 
 			item.host = strchr(item.user, '@');
+			if (!item.host)
+			{
+				ArgList = NULL;
+				break;
+			}
 			*item.host++ = 0;
 
 

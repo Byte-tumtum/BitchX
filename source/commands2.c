@@ -984,6 +984,11 @@ void who_user_killend(WhoEntry *w, char *unused, char **unused1)
 	{
 		who_buff = LOCAL_COPY(w->who_buff);
 		who_reason = strchr(who_buff, ':');
+		if (!who_reason)
+		{
+			new_free(&who_buff);
+			return;
+		}
 		*who_reason++ = 0;
 		server = atol(next_arg(who_buff, &who_buff));
 		pattern = next_arg(who_buff, &who_buff);
@@ -1000,9 +1005,11 @@ void who_user_killend(WhoEntry *w, char *unused, char **unused1)
 			{
 				if (!nick || !*nick)
 					break;
-				m_s3cat(&save_buffer, space, nick);
 				uh = strchr(nick, '!');
+				if (!uh)
+					continue;
 				*uh++ = 0;
+				m_s3cat(&save_buffer, space, nick);
 				num++;
 				count++;
 				m_s3cat(&buffer, ",", nick);

@@ -77,7 +77,7 @@ char	*thing_ansi = NULL;
  */
 char	*numeric_banner(void)
 {
-	static	char	thing[4];
+	static	char	thing[12];
 	if (!get_int_var(SHOW_NUMERICS_VAR))
 		return (thing_ansi?thing_ansi:empty_string);
 	snprintf(thing, sizeof thing, "%3.3d", -current_numeric);
