@@ -15,6 +15,7 @@ CVS_REVISION(parse_c)
 
 #include "alias.h"
 #include "server.h"
+extern Server *server_list;
 #include "names.h"
 #include "vars.h"
 #include "cdcc.h"
@@ -882,6 +883,40 @@ static	void p_error(char *from, char **ArgList)
 static	void p_cap(char *from, char **ArgList)
 {
 	char *caps, *p;
+
+	/* "CAP <target> LS ..." -- server advertising its capabilities.
+	 * With CAP LS 302 the list can span multiple lines: continuation
+	 * lines carry a literal '*' where the caps would otherwise be, and
+	 * only the final line marks the end of the negotiation. */
+	if (!strcmp(ArgList[1], "LS"))
+	{
+		int continuation = (ArgList[2] && !strcmp(ArgList[2], "*"));
+		const char *cap_list = continuation ? ArgList[3] : ArgList[2];
+
+		if (cap_list)
+		{
+			caps = LOCAL_COPY(cap_list);
+			while (!is_server_connected(from_server) && (p = next_arg(caps, &caps)) != NULL)
+			{
+				/* Advertised as "sasl" or "sasl=PLAIN" (CAP 3.2). */
+				if ((p[0] == 's' && p[1] == 'a' && p[2] == 's' && p[3] == 'l' &&
+				     (p[4] == '\0' || p[4] == '=')) &&
+				    get_server_sasl_nick(from_server) && get_server_sasl_pass(from_server) &&
+				    !server_list[from_server].sasl_requested)
+				{
+					server_list[from_server].sasl_requested = 1;
+					my_send_to_server(from_server, "CAP REQ :sasl");
+					break;
+				}
+			}
+		}
+
+		/* The final LS line ends the capability listing.  If we never
+		 * requested anything, end negotiation to continue registration. */
+		if (!continuation && !server_list[from_server].sasl_requested)
+			my_send_to_server(from_server, "CAP END");
+		return;
+	}
 
 	if (!strcmp(ArgList[1], "ACK"))
 	{

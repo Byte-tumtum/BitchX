@@ -990,6 +990,8 @@ void 	remove_from_server_list (int i)
 	new_free(&server_list[i].recv_nick);
 	new_free(&server_list[i].sent_nick);
 	new_free(&server_list[i].sent_body);
+	new_free(&server_list[i].sasl_nick);
+	new_free(&server_list[i].sasl_pass);
 #ifdef HAVE_LIBSSL
 	if (server_list[i].ctx)
 		SSL_CTX_free(server_list[i].ctx);
@@ -2368,12 +2370,28 @@ int	BX_check_server_redirect (char *who)
 void	register_server (int ssn_index, char *nick)
 {
 	int old_from_server = from_server;
+	const char *sasl_cfg_nick = BX_get_string_var(SASL_NICK_VAR);
+	const char *sasl_cfg_pass = BX_get_string_var(SASL_PASS_VAR);
+
+	/* Feed the globally-configured SASL credentials (if any) into this
+	 * server's entry so the capability negotiation can pick them up. */
+	if (sasl_cfg_nick && *sasl_cfg_nick && sasl_cfg_pass && *sasl_cfg_pass)
+	{
+		set_server_sasl_nick(ssn_index, sasl_cfg_nick);
+		set_server_sasl_pass(ssn_index, sasl_cfg_pass);
+	}
+
 	if (server_list[ssn_index].password)
 		my_send_to_server(ssn_index, "PASS %s", server_list[ssn_index].password);
 
+	/* Start capability negotiation when we have SASL credentials, so the
+	 * server advertises what it supports and we can request sasl. */
 	if (server_list[ssn_index].sasl_nick && server_list[ssn_index].sasl_pass)
-		my_send_to_server(ssn_index, "CAP REQ :sasl");
-		
+	{
+		server_list[ssn_index].sasl_requested = 0;
+		my_send_to_server(ssn_index, "CAP LS 302");
+	}
+
 	my_send_to_server(ssn_index, "USER %s %s %s :%s", username, 
 			(send_umode && *send_umode) ? send_umode : 
 			(LocalHostName?LocalHostName:hostname), 
@@ -3784,7 +3802,6 @@ int 	save_servers (FILE *fp)
 	return i;
 }
 
-#if 0
 void set_server_sasl_nick(int server, const char *nick)
 {
 	if (server <= -1 || server >= number_of_servers)
@@ -3794,7 +3811,6 @@ void set_server_sasl_nick(int server, const char *nick)
 	else
 		new_free(&server_list[server].sasl_nick);
 }
-#endif
 
 char *get_server_sasl_nick(int server)
 {
@@ -3803,7 +3819,6 @@ char *get_server_sasl_nick(int server)
 	return server_list[server].sasl_nick;
 }
 
-#if 0
 void set_server_sasl_pass(int server, const char *pass)
 {
 	if (server <= -1 || server >= number_of_servers)
@@ -3813,7 +3828,6 @@ void set_server_sasl_pass(int server, const char *pass)
 	else
 		new_free(&server_list[server].sasl_pass);
 }
-#endif
 
 char *get_server_sasl_pass(int server)
 {

@@ -165,6 +165,7 @@ typedef	struct
 #endif
 	char *sasl_nick;
 	char *sasl_pass;
+	int sasl_requested;
 
 /* recv_nick: the nickname of the last person to send you a privmsg */
 	char *recv_nick;
@@ -381,9 +382,9 @@ struct sockaddr_foobar	get_server_uh_addr		(int);
 	void	clean_split_server_list		(int, time_t);
 	void write_server_list(char *);
 	void write_server_file (char *);
-//	void set_server_sasl_nick(int, const char *);
+	void set_server_sasl_nick(int, const char *);
 	char *get_server_sasl_nick(int);
-//	void set_server_sasl_pass(int, const char *);
+	void set_server_sasl_pass(int, const char *);
 	char *get_server_sasl_pass(int);
 				
 #define SF_LOGGED_IN	0x0001U
