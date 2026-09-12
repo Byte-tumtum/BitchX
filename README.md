@@ -111,6 +111,8 @@ repository, or check the BitchX wiki FAQ.
 - **New formats:** `CHANNEL_URL`, `USERMODE_OTHER`, `WHOIS_CALLERID`,
   `WHOIS_SECURE`, `WHOIS_LOGGEDIN`.
 - **Plugins:** a rich plugin system activated with `--with-plugins`.
+- **SASL auth:** `/SET SASL_NICK` and `/SET SASL_PASS` authenticate via
+  `AUTHENTICATE PLAIN` during `CAP` negotiation (tested against Libera.Chat).
 
 See the bundled `README` (release notes) for full details, including how to
 restore the old NAMES formatting with `/FSET`.
@@ -124,6 +126,29 @@ BitchX irc.efnet.org
 Use `/help` inside the client for built-in help, or read the man page
 (`man BitchX`). More docs and example scripts live in
 [`bitchx-docs/`](bitchx-docs) and the `script/` directory.
+
+### SASL authentication
+
+Networks that support SASL (e.g. Libera.Chat) can authenticate your account
+at connect time instead of sending `/MSG NickServ IDENTIFY`:
+
+```sh
+BitchX -s irc.libera.chat
+```
+
+```irc
+/SET SASL_NICK myaccount
+/SET SASL_PASS mypassword
+```
+
+With both variables set, the client negotiates `CAP LS 302` on connect,
+requests the `sasl` capability when the server advertises it, and completes
+`AUTHENTICATE PLAIN` before finishing registration. If the password is
+wrong the server answers `904 SASL authentication failed` and the connection
+continues without an account.
+
+> For servers without SASL (e.g. EFNet), leaving both variables unset keeps
+> the connect path identical to a stock build — no `CAP` exchange is started.
 
 ## Security / hardening
 
