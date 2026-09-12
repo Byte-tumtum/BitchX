@@ -130,22 +130,35 @@ Use `/help` inside the client for built-in help, or read the man page
 ### SASL authentication
 
 Networks that support SASL (e.g. Libera.Chat) can authenticate your account
-at connect time instead of sending `/MSG NickServ IDENTIFY`:
+at connect time instead of sending `/MSG NickServ IDENTIFY`.
 
-```sh
-BitchX -s irc.libera.chat
-```
+Set your credentials first (case-insensitive variable names):
 
 ```irc
 /SET SASL_NICK myaccount
 /SET SASL_PASS mypassword
+/SAVE
+```
+
+Then connect. Two ways to get TLS to Libera:
+
+```sh
+# Via a local socat tunnel (any socat version): 127.0.0.1:7001 is plain
+# TCP on the loopback; socat speaks TLS to the real server for you.
+BitchX 127.0.0.1:7001
+
+# Directly, using BitchX's built-in SSL. Specify the TLS port explicitly:
+# `-s` marks the next server as SSL but does not change the default port!
+BitchX -s irc.libera.chat:6697
 ```
 
 With both variables set, the client negotiates `CAP LS 302` on connect,
 requests the `sasl` capability when the server advertises it, and completes
-`AUTHENTICATE PLAIN` before finishing registration. If the password is
-wrong the server answers `904 SASL authentication failed` and the connection
-continues without an account.
+`AUTHENTICATE PLAIN` before finishing registration. A successful login shows
+`NOTICE * :*** You are now identified for <account>` and applies any cloak
+you hold. If the password is wrong the server answers
+`904 SASL authentication failed` and the connection continues without an
+account.
 
 > For servers without SASL (e.g. EFNet), leaving both variables unset keeps
 > the connect path identical to a stock build — no `CAP` exchange is started.
