@@ -454,6 +454,24 @@ int 	BX_new_open (int des)
 	return des;
 }
 
+/*
+ * Is this a descriptor that newio currently has open?
+ * Guards against stale or garbage descriptor values in the server
+ * table, e.g. uninitialized slots whose read/write member does not
+ * match any descriptor newio has registered.  Bounds-checking against
+ * FD_SETSIZE also prevents out-of-range FD_ISSET access.
+ */
+int 	BX_is_registered_descriptor (int des)
+{
+	if (des < 0 || des >= FD_SETSIZE)
+		return 0;
+
+	if (FD_ISSET(des, &readables) || FD_ISSET(des, &writables))
+		return 1;
+
+	return 0;
+}
+
 int 	new_open_write (int des)
 {
 	if (des < 0)

@@ -15,6 +15,7 @@ extern 	int 	dgets_errno;
 	int 	BX_dgets 			(char *, int, int, int, void *);
 	int 	new_select 		(fd_set *, fd_set *, struct timeval *);
 	int	BX_new_open		(int);
+	int	BX_is_registered_descriptor (int);
 	int 	BX_new_close 		(int);
 	int	new_close_write		(int);
 	int	new_open_write		(int);

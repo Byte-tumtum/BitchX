@@ -140,7 +140,7 @@ void	BX_close_server (int cs_index, char *message)
 	new_free(&server_list[cs_index].sent_nick);
 	new_free(&server_list[cs_index].sent_body);
 
-	if (server_list[cs_index].write > -1)
+	if (server_list[cs_index].write > -1 && BX_is_registered_descriptor(server_list[cs_index].write))
 	{
 		if (message && *message && !server_list[cs_index].closing)
 		{
@@ -166,7 +166,7 @@ void	BX_close_server (int cs_index, char *message)
 #endif
 		new_close(server_list[cs_index].write);
 	}
-	if (server_list[cs_index].read > -1)
+	if (server_list[cs_index].read > -1 && BX_is_registered_descriptor(server_list[cs_index].read))
 		new_close(server_list[cs_index].read);
 	server_list[cs_index].write = server_list[cs_index].read = -1;
 	if (identd != -1)
@@ -266,11 +266,11 @@ void set_server_bits (fd_set *rd, fd_set *wr, struct timeval *wake_time)
 			}
 		}
 
-		if (server_list[i].read > -1)
+		if (server_list[i].read > -1 && BX_is_registered_descriptor(server_list[i].read))
 			FD_SET(server_list[i].read, rd);
 #ifdef NON_BLOCKING_CONNECTS
 		if (!(server_list[i].login_flags & SF_LOGGED_IN) &&
-		    server_list[i].write > -1)
+		    server_list[i].write > -1 && BX_is_registered_descriptor(server_list[i].write))
 			FD_SET(server_list[i].write, wr);
 #endif
 	}
@@ -397,13 +397,13 @@ static void scan_nonblocking(void)
 	
 	for (i = 0; i < number_of_servers; i++)
 	{
-		if (((server_list[i].read > -1) ||
-		     (server_list[i].write > -1)) &&
+		if ((BX_is_registered_descriptor(server_list[i].read) ||
+		     BX_is_registered_descriptor(server_list[i].write)) &&
 		    !(server_list[i].login_flags & SF_LOGGED_IN) &&
 		    time_since(&server_list[i].connect_time) > connect_timeout) {
-			if (server_list[i].read > -1)
+			if (BX_is_registered_descriptor(server_list[i].read))
 				new_close(server_list[i].read);
-			if (server_list[i].write > -1)
+			if (BX_is_registered_descriptor(server_list[i].write))
 				new_close(server_list[i].write);
 			server_list[i].read = server_list[i].write = -1;
 			set_server_reconnect(i, 1);
@@ -652,7 +652,7 @@ void	do_server (fd_set *rd, fd_set *wr)
 	for (i = 0; i < number_of_servers; i++)
 	{
 #ifdef NON_BLOCKING_CONNECTS
-		if (((des = server_list[i].write) > -1) && FD_ISSET(des, wr) && !(server_list[i].login_flags & SF_LOGGED_IN))
+		if (((des = server_list[i].write) > -1) && BX_is_registered_descriptor(des) && FD_ISSET(des, wr) && !(server_list[i].login_flags & SF_LOGGED_IN))
 		{
 			struct sockaddr_in sa;
 			socklen_t salen = sizeof(struct sockaddr_in);
@@ -673,7 +673,7 @@ void	do_server (fd_set *rd, fd_set *wr)
 			}
 		}
 #endif
-		if (((des = server_list[i].read) > -1) && FD_ISSET(des, rd))
+		if (((des = server_list[i].read) > -1) && BX_is_registered_descriptor(des) && FD_ISSET(des, rd))
 		{
 			int	junk = 0;
 			char 	*bufptr;
@@ -1398,7 +1398,7 @@ noidentwd:
 			say("new_des is %d", new_des);
 		say("Unable to connect to port %d of server %s: %s", port,
 				server_name, errno ? strerror(errno) :"unknown host");
-		if ((from_server != -1)&& (server_list[from_server].read != -1))
+		if ((from_server != -1) && BX_is_registered_descriptor(server_list[from_server].read))
 			say("Connection to server %s resumed...", server_list[from_server].name);
 #ifdef WDIDENT
 		if(candofilestuff)
@@ -1461,7 +1461,7 @@ int 	BX_connect_to_server_by_refnum (int refnum, int c_server)
 	sname = server_list[refnum].name;
 	sport = server_list[refnum].port;
 
-	if (server_list[refnum].read == -1)
+	if (!BX_is_registered_descriptor(server_list[refnum].read))
 	{
 		if (sport == -1)
 			sport = irc_port;
@@ -2694,9 +2694,9 @@ extern	void BX_close_all_server (void)
 
 	for (i = 0; i < number_of_servers; i++)
 	{
-		if (server_list[i].read != -1)
+		if (BX_is_registered_descriptor(server_list[i].read))
 			new_close(server_list[i].read);
-		if (server_list[i].write != -1)
+		if (BX_is_registered_descriptor(server_list[i].write))
 			new_close(server_list[i].write);
 	}
 }
@@ -2720,8 +2720,10 @@ char	*message;
 				clear_channel_list(i);
 				clean_server_queues(i);
 				server_list[i].eof = -1;
-				new_close(server_list[i].read);
-				new_close(server_list[i].write);
+				if (BX_is_registered_descriptor(server_list[i].read))
+					new_close(server_list[i].read);
+				if (BX_is_registered_descriptor(server_list[i].write))
+					new_close(server_list[i].write);
 			}
 		}
 		goto done;
