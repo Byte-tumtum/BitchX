@@ -559,10 +559,6 @@ int old_strip_ansi = strip_ansi_in_echo;
 	if (!startup_ansi)
 		return;
 
-#if !defined(WINNT) && !defined(__EMX__)
-	charset_ibmpc();
-#endif
-
 	do_ansi_logo(i);
 #if !defined(WINNT) && !defined(__EMX__)
 #if defined(LATIN1)

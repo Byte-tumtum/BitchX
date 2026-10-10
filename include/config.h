@@ -268,7 +268,7 @@
 /*
  * Normally BitchX uses only the IBMPC (cp437) charset.
  * Define LATIN1, if you want to see the standard Latin1 characters
- * (i.e. Ä Ö Ü ä ö ü ß <-> "A "O "U "a "o "u \qs ).
+ * (i.e. ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ <-> "A "O "U "a "o "u \qs ).
  *
  * You will still be able to see ansi graphics, but there will be some
  * smaller problems (i.e. after a PageUp).
@@ -438,7 +438,7 @@
 #define DEFAULT_UNDERLINE_VIDEO ON
 #define DEFAULT_VERBOSE_CTCP ON
 #define DEFAULT_DISPLAY_ANSI ON
-#define DEFAULT_DISPLAY_PC_CHARACTERS 4
+#define DEFAULT_DISPLAY_PC_CHARACTERS 6
 #define DEFAULT_DCC_AUTOGET OFF
 #define DEFAULT_DCC_GET_LIMIT 0
 #define DEFAULT_DCC_SEND_LIMIT 5

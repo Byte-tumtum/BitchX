@@ -323,6 +323,9 @@ struct prepare_display_state
  *     strip the character from the output string completely.
  * 3 - insert the character exactly as is, and reply on the users terminal
  *     displaying it correctly as a graphics character (pass-through mode).
+ * 4 - pass all characters through exactly as is.
+ * 6 - convert upper-half characters to UTF-8, for terminals running in a
+ *     UTF-8 locale.
  *
  * If we detect the beginning of a Ctrl-C color sequence, we pick up the
  * color values, and then examine the user variable COLOR_CONTROL_C.
@@ -956,6 +959,63 @@ int BX_output_line(const char *str)
 }
 
 /*
+ * CP437 (IBM PC "code page 437") to Unicode mapping for the upper half of
+ * the character set.  Used to display the classic PC graphics characters
+ * (blocks, box drawing, accented letters) on UTF-8 terminals.
+ */
+static const unsigned short cp437_to_uni[128] = {
+	0x00C7, 0x00FC, 0x00E9, 0x00E2, 0x00E4, 0x00E0, 0x00E5, 0x00E7,
+	0x00EA, 0x00EB, 0x00E8, 0x00EF, 0x00EE, 0x00EC, 0x00C4, 0x00C5,
+	0x00C9, 0x00E6, 0x00C6, 0x00F4, 0x00F6, 0x00F2, 0x00FB, 0x00F9,
+	0x00FF, 0x00D6, 0x00DC, 0x00A2, 0x00A3, 0x00A5, 0x20A7, 0x0192,
+	0x00E1, 0x00ED, 0x00F3, 0x00FA, 0x00F1, 0x00D1, 0x00AA, 0x00BA,
+	0x00BF, 0x2310, 0x00AC, 0x00BD, 0x00BC, 0x00A1, 0x00AB, 0x00BB,
+	0x2591, 0x2592, 0x2593, 0x2502, 0x2524, 0x2561, 0x2562, 0x2556,
+	0x2555, 0x2563, 0x2551, 0x2557, 0x255D, 0x255C, 0x255B, 0x2510,
+	0x2514, 0x2534, 0x252C, 0x251C, 0x2500, 0x253C, 0x255E, 0x255F,
+	0x255A, 0x2554, 0x2569, 0x2566, 0x2560, 0x2550, 0x256C, 0x2567,
+	0x2568, 0x2564, 0x2565, 0x2559, 0x2558, 0x2552, 0x2553, 0x256B,
+	0x256A, 0x2518, 0x250C, 0x2588, 0x2584, 0x258C, 0x2590, 0x2580,
+	0x03B1, 0x00DF, 0x0393, 0x03C0, 0x03A3, 0x03C3, 0x00B5, 0x03C4,
+	0x03A6, 0x0398, 0x03A9, 0x03B4, 0x221E, 0x03C6, 0x03B5, 0x2229,
+	0x2261, 0x00B1, 0x2265, 0x2264, 0x2320, 0x2321, 0x00F7, 0x2248,
+	0x00B0, 0x2219, 0x00B7, 0x221A, 0x207F, 0x00B2, 0x25A0, 0x00A0
+};
+
+/*
+ * Emit a PC graphics character as UTF-8.  This keeps the display correct
+ * on modern (UTF-8) terminals, where the raw CP437 bytes the client would
+ * otherwise pass through are not valid UTF-8.
+ */
+static void output_gchar_utf8 (int code)
+{
+	unsigned int u;
+	unsigned char c = (unsigned char) code;
+
+	if (c < 0x80)
+	{
+		putchar_x(c);
+		return;
+	}
+
+	u = cp437_to_uni[c - 0x80];
+
+	if (u < 0x80)
+		putchar_x(u);
+	else if (u < 0x800)
+	{
+		putchar_x(0xC0 | (u >> 6));
+		putchar_x(0x80 | (u & 0x3F));
+	}
+	else
+	{
+		putchar_x(0xE0 | (u >> 12));
+		putchar_x(0x80 | ((u >> 6) & 0x3F));
+		putchar_x(0x80 | (u & 0x3F));
+	}
+}
+
+/*
  * NOTE: When we output colors, we explicitly turn off bold and reverse,
  * as they can affect the display of the colors. We turn them back on
  * afterwards, though. We don't need to worry about blinking or underline
@@ -1160,7 +1220,12 @@ int BX_output_with_count(const char *str, int clreol, int output)
 				 (ptr[3] - '0');
 
 			if (output)
-				term_putgchar(val1);
+			{
+				if (get_int_var(DISPLAY_PC_CHARACTERS_VAR) == 6)
+					output_gchar_utf8(val1);
+				else
+					term_putgchar(val1);
+			}
 
 			ptr += 3;
 			out++;
@@ -2391,6 +2456,28 @@ char *BX_strip_ansi(const char *str)
 
 			switch (my_gcmode)
 			{
+				/*
+				 * In gcmode 6, convert upper-half characters into
+				 * a ROM_CHAR sequence so they can be emitted as
+				 * UTF-8 later.  This keeps them counted as a
+				 * single display column.
+				 */
+				case 6:
+				{
+					unsigned char uc = (unsigned char) chr1;
+
+					if (uc < 0x80)
+					{
+						output[pos++] = chr;
+						break;
+					}
+					output[pos++] = ROM_CHAR;
+					output[pos++] = '0' + (uc / 100) % 10;
+					output[pos++] = '0' + (uc / 10) % 10;
+					output[pos++] = '0' + uc % 10;
+					break;
+				}
+
 				/*
 				 * In gcmode 5, translate all characters
 				 */
