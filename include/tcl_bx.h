@@ -11,7 +11,7 @@ int handle_tcl_chan (int, char *, char *, char *);
 
 typedef struct {
 	char *name;
-  int (*func) (int, char *);
+	int (*func) ();
 	int access;
 	char *help;
 } cmd_t;
