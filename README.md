@@ -2,7 +2,7 @@
 
 ![BitchX screenshot](BitchX.png)
 
-![BitchX screenshot](screenshot-2026-10-10_21-27-05.png)
+![BitchX screenshot](Pictures/BitchX_e16_Aliens.png)
 
 BitchX is a free, text-based IRC (Internet Relay Chat) client for UNIX-like
 systems. It descends from **ircII** and is heavily influenced by **EPIC**,
